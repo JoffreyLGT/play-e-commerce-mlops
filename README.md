@@ -355,6 +355,8 @@ Les PR doivent obligatoirement être liées à une issue et avoir une descriptio
 
 Nous utilisons la convention [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+TODO @JoffreyLGT: ajouter la liste des types et scopes. [#82](<https://github.com/JoffreyLGT/e-commerce-mlops/issues/82>)
+
 Une extension VSCode est recommandée dans le workspace permettant de rédiger les messages façilement. Pour l'utiliser :
 
 1. Ouvrir la palette des commandes (`Cmd+Shift+p`).
