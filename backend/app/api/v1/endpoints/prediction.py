@@ -1,50 +1,43 @@
 """Routes to predict product categories."""
 
 from io import BytesIO
-from pathlib import Path
 from typing import Any
 
 import numpy as np
-import requests
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from PIL import Image, UnidentifiedImageError
 
-from app import models
+from app import models, schemas
 from app.api import dependencies
-from app.core import image_data_utils
-from app.core.settings import settings
-from app.schemas import PredictionResult
+from datascience.classification import predict_prdtypecode
+from datascience.src.data import CATEGORIES_DIC
 
 router = APIRouter()
 
 
-@router.post("/", response_model=list[PredictionResult])
+@router.post("/", response_model=list[schemas.PredictionResult])
 async def predict_category(
     *,
-    designation: str | None = "",
-    description: str | None = "",
+    designation: str | None = None,
+    description: str | None = None,
     image: UploadFile | None = None,
     limit: int | None = None,
     # Authentication and access management, do not delete!
-    _current_user: models.User = Depends(  # pyright: ignore
-        dependencies.get_current_active_user
-    ),
+    _current_user: models.User = Depends(dependencies.get_current_active_user),
 ) -> Any:
     """Predict the category of the product.
 
     Raises:
-    - HTTPException: 400 if image extension is invalid.
-    - HTTPException: 400 if image format is invalid.
-    - HTTPException: 400 if limit is not a positive int.
-    - HTTPException: 400 if all data fields are empty.
-    - HTTPException: 500 if an error occures when requesting prediction.
+        HTTPException: 400 if image extension is invalid.
+        HTTPException: 400 if image format is invalid.
+        HTTPException: 400 if limit is not a positive int.
+        HTTPException: 400 if not enough data is provided.
 
     Returns:
-        A list of object with 2 properties: category_id and probabilities.
-        It is sorted by probabilities descending.
+        Prediction results with category id, probabilities and category label.
     """
     expected_shape_len = 3
-    image_path = ""
+    image_data = None
     if image is not None:
         extension = (
             False
@@ -78,8 +71,6 @@ async def predict_category(
                 detail=("Invalid image: should be a coloured JPEG or JPG."),
             )
 
-        image_path = str(image_data_utils.save_temporary_image(image_data))
-
     if limit is not None and limit <= 0:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
@@ -87,47 +78,19 @@ async def predict_category(
         )
 
     # Check if we have data. We need either text data or an image to do a prediction
-    if designation == "" and description == "" and image is None:
+    if designation is None and description is None and image is None:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail="You must provide either designation/description or an image to get a result.",  # noqa: E501
         )
 
-    rqt_body = {
-        "dataframe_records": [
-            {
-                "product_id": "1",
-                "designation": designation,
-                "description": description,
-                "image_path": image_path,
-            }
-        ]
-    }
+    # Get the predictions from model
+    predictions = predict_prdtypecode(designation, description, image_data)
+    # Since the predictions are sorted by probabilities descending, we just need to
+    # return the {limit} first elements of the list
+    result = [(i[0], i[1], CATEGORIES_DIC[i[0]]) for i in predictions[0][:limit]]
 
-    response = requests.post(
-        (
-            f"http://{settings.DATASCIENCE_SERVER}:{settings.DATASCIENCE_MODEL_PORT}"
-            "/invocations"
-        ),
-        json=rqt_body,
-    )
-
-    if image_path != "":
-        Path(image_path).unlink(missing_ok=True)
-
-    if response.status_code != requests.codes.ok:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    model_response = response.json()
-    predictions = model_response["predictions"][0]
-    predictions.pop("product_id")
-
-    result: list[PredictionResult] = [
-        PredictionResult(category_id=int(category_id), probabilities=probabilities)
-        for category_id, probabilities in zip(predictions.keys(), predictions.values())
+    return [
+        schemas.PredictionResult(category_id=i[0], probabilities=i[1], label=i[2])
+        for i in result
     ]
-    result.sort(key=lambda x: x.probabilities, reverse=True)
-
-    if limit is not None:
-        return result[:limit]
-    return result

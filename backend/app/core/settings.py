@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     SERVER_NAME: str | None = None
     SERVER_HOST: AnyHttpUrl | None = None
 
-    DB_SERVER: str | None = None
+    POSTGRES_SERVER: str | None = None
     POSTGRES_USER: str | None = None
     POSTGRES_PASSWORD: str | None = None
     POSTGRES_DB: str | None = None
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
             scheme="postgresql",
             user=values.get("POSTGRES_USER"),
             password=values.get("POSTGRES_PASSWORD"),
-            host=f"{values.get('DB_SERVER') or ''}",
+            host=f"{values.get('POSTGRES_SERVER') or ''}",
             path=f"/{values.get('POSTGRES_DB') or ''}",
         )
 
@@ -92,51 +92,6 @@ class Settings(BaseSettings):
 
     # Defined as ENV variable on Github Actions. Used for specific conditions.
     IS_GH_ACTION: bool = False
-
-    # Directory in which all images and persistant data is stored.
-    DATA_DIR: Path = Path("data")
-
-    @validator("DATA_DIR")
-    def create_directory(
-        cls,  # noqa: N805 false positive, first argument must be cls for validator
-        dir_path: Path,
-    ) -> Path:
-        """Create the directory if it doesn't exists."""
-        dir_path.mkdir(parents=True, exist_ok=True)
-        return dir_path
-
-    # Sub directory in DATA_DIR in which we store products images temporarily
-    TEMPORARY_PRODUCT_IMAGES_DIR: Path = Path("temp_products_images")
-
-    # Sub directory in DATA_DIR in which we store products images we want to keep
-    PRODUCTS_IMAGES_DIR: Path = Path("products_images")
-
-    @validator("TEMPORARY_PRODUCT_IMAGES_DIR", "PRODUCTS_IMAGES_DIR")
-    def create_sub_directory(
-        cls,  # noqa: N805 false positive, first argument must be cls for validator
-        dir_path: Path,
-        values: dict[str, Any],
-    ) -> Path:
-        """Create the directory if it doesn't exists.
-
-        Args:
-            cls: this class.
-            dir_path: path of the sub directory to create.
-            values: other entries in this class.
-
-        Returns:
-            dir_path without any modification.
-        """
-        data_dir: Path = values["DATA_DIR"]
-        full_path = data_dir / dir_path
-        full_path.mkdir(parents=True, exist_ok=True)
-        return full_path
-
-    # Name of the datascience server on the network
-    DATASCIENCE_SERVER: str = "localhost"
-
-    # Port on which fusion model is served
-    DATASCIENCE_MODEL_PORT: int = 5011
 
     class Config:
         """Pydantic configuration."""

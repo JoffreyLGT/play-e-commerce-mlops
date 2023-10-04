@@ -1,5 +1,2 @@
-**/*cache*
-datascience/mlruns
-datascience/data
-datascience/logs
-**/.venv
+**/node_modules
+**/.venv/**
