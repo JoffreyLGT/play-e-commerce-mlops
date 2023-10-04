@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "backend"
-version = "1.0.0"
+version = "0.0.0"
 description = "API to predict a product category"
 authors = ["Joffrey Lagut <j.lagut@live.fr>"]
 readme = "../README.md"
