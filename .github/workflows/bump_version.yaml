@@ -1,10 +1,8 @@
 name: Release version
 
 on:
-  push:
-    branches:
-      - develop
-
+  workflow_dispatch:
+  
 jobs:
   bump-version:
     if: "!startsWith(github.event.head_commit.message, 'bump:')"
