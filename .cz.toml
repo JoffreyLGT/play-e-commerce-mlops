@@ -1,7 +1,6 @@
 [tool.commitizen]
 version = "0.0.0"
 version_scheme = "semver"
-gpg_sign = true
 update_changelog_on_bump = true
 changelog_incremental = true
 # Do not bump major version until we have setup Kubernete
