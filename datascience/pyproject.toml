@@ -33,13 +33,8 @@ tensorflow-metal = { version = "1.0.0", platform = "darwin" }
 tensorflow-intel = { version = "2.13.0", markers = "platform_system=='Windows'" }
 
 mlflow = "^2.6.0"
-pydantic = { version = "*", extras = ["dotenv"] }
+pydantic = {version = "*", extras = ["dotenv"]}
 python-json-logger = "^2.0.7"
-imagesize = "^1.4.1"
-pillow = "^10.0.0"
-pydantic-argparse = "^0.8.0"
-nltk = "^3.8.1"
-gdown = "^4.7.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "0.*"
@@ -48,15 +43,26 @@ black = "^23.7.0"
 mypy = "^1.5.1"
 pandas-stubs = "*"
 pytest = "^7.4.0"
-vulture = "^2.9.1"
-types-pillow = "^10.0.0.3"
-
-[tool.poetry.group.download.dependencies]
-gdown = "^4.7.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+exclude = ["**/.pytest_cache", "**/__pycache__", ".ruff_cache"]
+
+[tool.mypy]
+strict = true
+warn_return_any = false
+implicit_reexport = false
+namespace_packages = true
+plugins = ["numpy.typing.mypy_plugin", "pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "gdown"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 filterwarnings = [

@@ -6,8 +6,5 @@ update_changelog_on_bump = true
 changelog_incremental = true
 # Do not bump major version until we have setup Kubernete
 major_version_zero = true
-version_files = [
-  "datascience/pyproject.toml:version",
-  "backend/pyproject.toml:version",
-]
+version_files = ["datascience/pyproject.toml", "backend/pyproject.toml"]
 bump_message = "build(release): $current_version -> $new_version"
