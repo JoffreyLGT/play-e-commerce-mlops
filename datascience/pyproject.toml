@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "datascience"
-version = "0.1.0"
+version = "0.0.0"
 description = "Create and test product classification models and track their performance using MLFlow."
 authors = ["Joffrey Lagut <j.lagut@live.fr>"]
 readme = "../README.md"
@@ -60,8 +60,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    # action:message:category:module:line
-    "ignore::UserWarning",
-    "ignore::DeprecationWarning:passlib",
-    "ignore::DeprecationWarning:tensorflow",
+  # action:message:category:module:line
+  "ignore::UserWarning",
+  "ignore::DeprecationWarning:passlib",
+  "ignore::DeprecationWarning:tensorflow",
 ]
