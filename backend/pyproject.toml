@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "backend"
-version = "0.0.0"
+version = "0.1.0"
 description = "API to predict a product category"
 authors = ["Joffrey Lagut <j.lagut@live.fr>"]
 readme = "../README.md"
@@ -42,7 +42,7 @@ psycopg2 = "^2.9.7"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 python-multipart = "^0.0.6"
-pillow = "^10.0.0"
+pillow = "^10.1.0"
 nltk = "^3.8.1"
 pandas = "^2.0.3"
 scipy = "^1.11.2"

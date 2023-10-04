@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "datascience"
-version = "0.0.0"
+version = "0.1.0"
 description = "Create and test product classification models and track their performance using MLFlow."
 authors = ["Joffrey Lagut <j.lagut@live.fr>"]
 readme = "../README.md"
