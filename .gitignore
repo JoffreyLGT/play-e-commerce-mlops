@@ -182,7 +182,9 @@ docker-stack.yaml
 # Ruff cache
 .ruff_cache
 
+backend/data
 datascience/data
 datascience/.python-version
-logs
+datascience/logs
 datascience/mlruns
+datascience/deployment

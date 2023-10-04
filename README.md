@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 MD033-->
+
 # Catégorisation des produits d'un boutique en ligne
 
 ![Python version](https://img.shields.io/badge/Python-3.11-blue.svg)
@@ -15,24 +17,25 @@ API permettant de prédire la catégorie d'un produit en fonction de sa désigna
 
 ## Structure du projet
 
-```txt
+```text
 E-COMMERCE-MLOPS/
 ├─ .devcontainer/ : fichiers du conteneur de dev
 ├─ .github/workflow/ : Github Actions
 ├─ .vscode/tasks.json : tâches du project global
-├─ backend/ : API de prédiction (sous-projet)
-├─ datascience/ : MLOPS via MLFlow (sous-projet)
-├─ frontend/ : placeholder pour une éventuelle application WEB pour interagir avec l'API
+├─ backend/ : Projet - API permettant aux utilisateurs de prédire la catégorie d'un produitg
+├─ datascience/ : Projet - entraînement, tracking et mise à disposition des modèles de prédiction
 ├─ scripts/ : liste des scripts globaux du projet
 │ ├─ ressources/ : contient les ressources nécessaires aux scripts
 │ ├─ tests/ : sous-scripts utilisés par `run-tests.sh`
-├─ .env : définition des variables d'environnement
+├─ dev.env : fichier de configuration de l'environnement de développement
+├─ staging.env : fichier de configuration l'environnement de test
+├─ template.env : version "de base" du fichier de configuration
 ```
 
 ## Mise en place avec Docker
 
 1. Remplir le fichier [`.env`](.env) avec les informations du projet.
-2. Toujours dans [`.env`](.env), vérifier que la valeur de la variable `ENV_TARGET` est renseignée.
+2. Toujours dans [`.env`](.env), vérifier que la valeur de la variable `TARGET_ENV` est renseignée.
 3. Exécuter [`scripts/docker-deploy.sh`](scripts/docker-deploy.sh) pour créer les conteneurs.
 4. Lancer les conteneurs via Docker Desktop ou via ligne de commande :
 
@@ -49,7 +52,7 @@ Utilisation de la machine locale pour le développement permettant l'utilisation
 
 Prérequis :
 
-- Système UNIX-like (Linux, MacOS). Les utilisateurs de Windows peuvent soit utiliser le [conteneur de développement](#conteneur-de-développement) mis à disposition, soit installer un système Linux sur [WSL2](https://learn.microsoft.com/fr-fr/windows/wsl/install).
+- Système UNIX-like (Linux, MacOS). Les utilisateurs de Windows peuvent soit utiliser le [conteneur de développement](#dev-container) mis à disposition, soit installer un système Linux sur [WSL2](https://learn.microsoft.com/fr-fr/windows/wsl/install).
 - [Visual Studio Code](https://code.visualstudio.com)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Python 3.11](https://www.python.org/downloads/)
@@ -71,7 +74,7 @@ Mise en place :
 
     ```env
     USE_DB_CONTAINER=true
-    POSTGRES_SERVER=localhost
+    DB_SERVER=localhost
     ```
 
 6. Une fois le projet ouvert, ouvrir un terminal dans le dossier `root`, et saisir la commande ci-dessous :
@@ -81,6 +84,8 @@ Mise en place :
     ```
 
 7. Installer les [extensions recommandées dans le workspace.](#extensions)
+
+<a id="dev-container" />
 
 ### Conteneur de développement
 
@@ -119,9 +124,9 @@ Sur la ligne `WORKSPACE RECOMMENDATION`, cliquer sur `Install workspace Recommen
 
 Cette section concerne les outils en général. Chaque sous-projet a sa propre section :
 
-- [root](#questions-et-réponses-root)
-- [backend](#questions-et-réponses-backend)
-- [datascience](#questions-et-réponses-datascience)
+- [root](#root-q&a)
+- [backend](#backend-q&a)
+- [datascience](#datascience-q&a)
 
 ### Docker m'indique que je le disque de la VM est plein
 
@@ -140,7 +145,7 @@ docker system prune -a --volumes
 
 - Ouvrir le moniteur d'activité pour repérer le processus utilisant le CPU.
 - S'il s'agit de `code helper (plugin)`, noter le PID.
-- Quitter complètement VSCode (`Cmd + Q`` sur MacOS)
+- Quitter complètement VSCode (`Cmd + Q` sur MacOS)
 
     Si le processus disparait, relancer VSCode et attendre quelques minutes. Si le processus ne revient pas, tout est de nouveau en ordre. Sinon, continuer les étapes ci-dessous.
 
@@ -196,6 +201,46 @@ Il s'agit d'un multi-root workspace configuré pour permettre un fonctionnement 
 
 Contient les fichiers commun à tout le projet, les sous-projets ainsi que des fichiers utilisés dans les sous-projets.
 
+### Continuous integration et Continuous delivery (CI/CD)
+
+```mermaid
+sequenceDiagram
+    box Local
+    participant A as Developer
+    participant B as Git hooks
+    end
+    box Server
+    participant C as Git repository<br/>Github
+    participant D as CI/CD<br/>Github Actions
+    end
+    A->>+B: Commit
+    alt Pre-commit
+    B-->>+B: Is formating good?
+    B-->>-A: No, auto-format some files
+    else Commit-msg
+    B-->>+B: Message respects<br/>convention?
+    B-->>-A: No, give reason<br/>Stop commit
+    end
+    B->>+A: Commit created
+    A->>-B: Push
+    alt Pre-push
+    B-->>+B: Run formatters
+    B-->>B: Run linters
+    B-->>B: Run type checkers
+    B-->>-A: Fail!
+    end
+    B->>C: Push
+    A->>+C: Create pull request
+    alt On pull-request
+    C->>-D: Trigger actions
+    D-->>+D: Run formatters
+    D-->>D: Run linters
+    D-->>D: Run type checkers
+    D-->>D: Run unit tests
+    D-->>-C: Send results
+    end
+```
+
 #### Symlinks
 
 Attention, certains fichiers sont référencés comme symlinks dans les sous-projets:
@@ -214,6 +259,8 @@ Les tâches ci-dessous sont disponibles :
 | Run Git pre-commit hooks  | Permet de lancer les hook git de pre-commit sans avoir à faire de commit.          |
 | Run Git pre-push hooks  | Permet de lancer les hook Git de pre-push sans avoir à faire de commit.          |
 
+<a id="root-q&a" />
+
 #### Questions et réponses (root)
 
 Rien pour le moment.
@@ -230,10 +277,10 @@ Le lancement de l'API en mode développement sur le conteneur se fait avec le sc
 ./scripts/start-reload.sh
 ```
 
-VSCode s'occupe automatiquement de la redirection du port 8000.
+VSCode s'occupe automatiquement de la redirection du port $BACKEND_FASTAPI_PORT.
 Ouvrir l’adresse ci-dessous dans un navigateur Web sur la machine hôte pour afficher la documentation :
 
-<http://localhost:8000/docs>
+<http://localhost:$BACKEND_FASTAPI_PORT/docs>
 
 Une tâche portant le nom `Start API in reload mode` permet de lancer l'API en mode développement.
 
@@ -278,6 +325,8 @@ Les tâches ci-dessous sont disponibles :
 | Check Tensorflow GPU support | Affiche un message pour indiquer si Tensorflow supporte des GPU dans l'environnement. |
 | Start PostgreSQL DB container | Démarre le conteneur *db* depuis le fichier [docker-compose.yaml](docker-compose.yaml). |
 | Stop PostgreSQL DB container | Stop le conteneur *db* démarré depuis la tâche Start PostgreSQL DB container. |
+
+<a id="backend-q&a" />
 
 #### Questions et réponses (backend)
 
@@ -338,6 +387,379 @@ Les tâches ci-dessous sont disponibles :
     ```
 
 ### datascience
+
+#### Création d'un jeu de données
+
+En partant du principe que toutes les données ont été stockées dans le dossier `data/datasets/original` avec la structure suivante :
+
+```text
+original
+├── X.csv
+├── y.csv
+└──── images
+   ├── image_977803476_product_278535420.jpg
+   ├── image_1174586892_product_2940638801.jpg
+   └── [...]
+```
+
+- `X.csv` contient les features, à savoir les informations sur le produit dans les colonnes `désignation`, `description`, `productid` et `imageid`.
+- `y.csv` contient la target, à savoir la catégorie du produit dans une colonne.
+- `images` contient toutes les images des produits. Les images doivent respecter la convention `image_[imageid]_[productid].jpg`
+
+Pour créer un dataset (jeu de données) pour l'entrainement, utiliser le script [create_datasets.py](datascience/scripts/create_datasets.py).
+
+```bash
+# Depuis le dossier e-commerce-mlops/datascience
+python -m scripts.create_datasets --train-size 0.8 --test-size 0.2 --input-dir "data/originals" --output-dir "data/datasets/example"
+```
+
+Le script va s'occuper de traiter les images pour retirer les bandes blanches inutiles, les redimentionner et va créer les jeux de données d'entrainement (80%) et de test (20%) au format `.csv`.
+
+#### Entrainement d'un modèle
+
+Le projet utilise 3 modèles (image, texte et fusion). De ce fait, 3 scripts sont mis à disposition pour l'entrainement :
+
+- [train_image_model.py](datascience/scripts/train_image_model.py)
+- [train_text_model.py](datascience/scripts/train_text_model.py)
+- [train_fusion_model.py](datascience/scripts/train_fusion_model.py)
+
+Ceux-ci utilisent [MLFlow](https://mlflow.org) pour le suivi des metrics.
+
+Chaque script est documenté. Pour afficher l'aide, utiliser la commande `--help`.  
+Exemple :
+
+```bash
+# Affiche l'aide du script train_image_model.py
+python -m scripts.train_image_model --help
+```
+
+Ce qui affiche :
+
+```text
+usage: train_image_model.py [-h] [--input-dir INPUT_DIR] [--output-dir OUTPUT_DIR] [--batch-size BATCH_SIZE]
+                            [--no-data-augmentation] [--train-patience TRAIN_PATIENCE] [--epochs EPOCHS] [--set-staging]
+                            [--registered-model REGISTERED_MODEL]
+
+Create and train a new image model using dataset provided with --input-dir, then save it to --output-dir with its performance
+statistics.
+
+required arguments:
+  --input-dir INPUT_DIR
+                        Directory containing the datasets to use.
+  --output-dir OUTPUT_DIR
+                        Directory to save trained model and stats.
+
+optional arguments:
+  --batch-size BATCH_SIZE
+                        Size of the batches to use for the training. Set as much as your machine allows. (default: 96)
+  --no-data-augmentation
+                        Add layers of data augmentation to avoid early overfitting. (default: True)
+  --train-patience TRAIN_PATIENCE
+                        Number of epoch to do without improvements before stopping the model training. (default: 10)
+  --epochs EPOCHS       Number of epochs to reach before stopping. Stops before if train-patience is reached. (default: 100)
+  --set-staging         Set new model version status as staging for 'fusion' model (default: False)
+  --registered-model REGISTERED_MODEL
+                        (default: image)
+
+help:
+  -h, --help            show this help message and exit
+```
+
+#### Mise en ligne d'une nouvelle version du modèle
+
+1. Dans un terminal, lancer l'interface graphique de MLFlow avec la commande suivante :
+
+    ```bash
+    mlflow ui
+    ```
+
+2. Dans l'en-tête, cliquer sur `Experiments`.
+3. Rechercher le run du modèle à mettre en production et cliquer dessus.
+4. Dans la liste des `artifacts`, cliquer sur le modèle, puis sur `Register Model`.
+5. Dans la popup qui s'ouvre, sélectionner le modèle en question, puis cliquer sur `Register`.
+6. Dans l'en-tête, cliquer sur le modèle, puis sur la version.
+7. Le champ `Stage` permet de changer le statut du modèle (`Staging` pour test, `Production` pour production.
+8. Utiliser la commande ci-dessous pour lancer le modèle :
+
+    ```bash
+    # Remplacer image par le nom du modèle, et Staging par Production pour une mise en production
+    mlflow models serve -m "models:/fusion/Staging" --port 5002 --env-manager local
+    ```
+
+#### Envoyer une requête sur le modèl
+
+- Exemple de requête pour effectuer une prédiction sur le modèle Fusion :
+
+<details>
+<summary>Cliquer ici pour afficher la requête.</summary>
+
+```bash
+curl --location 'localhost:5002/invocations' \
+--header 'Content-Type: application/json' \
+--data '{
+    "dataframe_records": [
+        {
+            "product_id": "1",
+            "designation": "",
+            "description": "",
+            "image_path": "/Users/joffrey/workspace/e-commerce-mlops/datascience/data/datasets/subset_1/images/image_62350930_product_2242045.jpg"
+        },
+        {
+            "product_id": "2",
+            "designation": "Jeux Xbox",
+            "description": "",
+            "image_path": ""
+        },
+        {
+            "product_id": "3",
+            "designation": "",
+            "description": "Jeux Xbox Elder scrolls",
+            "image_path": ""
+        },
+        {
+            "product_id": "4",
+            "designation": "Jeux Xbox Elder scrolls",
+            "description": "UN RPG comme on les aimes !",
+            "image_path": "/Users/joffrey/workspace/e-commerce-mlops/datascience/data/datasets/subset_1/images/image_62350930_product_2242045.jpg"
+        },
+        {
+            "product_id": "5",
+            "designation": "",
+            "description": "",
+            "image_path": ""
+        }
+    ]
+}'
+```
+
+</details>
+<br/>
+
+- Le résultat contient l'objet JSON suivant :
+
+<details>
+<summary>Cliquer ici pour afficher le résultat.</summary>
+
+```json
+{
+    "predictions": [
+        {
+            "product_id": "2",
+            "10": "3.64",
+            "1140": "3.62",
+            "1160": "3.68",
+            "1180": "3.59",
+            "1280": "3.77",
+            "1281": "3.76",
+            "1300": "3.76",
+            "1301": "3.62",
+            "1302": "3.71",
+            "1320": "3.72",
+            "1560": "3.81",
+            "1920": "3.68",
+            "1940": "3.65",
+            "2060": "3.72",
+            "2220": "3.56",
+            "2280": "3.77",
+            "2403": "3.78",
+            "2462": "3.72",
+            "2522": "3.74",
+            "2582": "3.7",
+            "2583": "3.81",
+            "2585": "3.72",
+            "2705": "3.66",
+            "2905": "3.68",
+            "40": "3.78",
+            "50": "3.69",
+            "60": "3.63"
+        },
+        {
+            "product_id": "3",
+            "10": "3.64",
+            "1140": "3.62",
+            "1160": "3.68",
+            "1180": "3.59",
+            "1280": "3.77",
+            "1281": "3.76",
+            "1300": "3.76",
+            "1301": "3.62",
+            "1302": "3.71",
+            "1320": "3.72",
+            "1560": "3.81",
+            "1920": "3.68",
+            "1940": "3.65",
+            "2060": "3.72",
+            "2220": "3.56",
+            "2280": "3.77",
+            "2403": "3.78",
+            "2462": "3.72",
+            "2522": "3.74",
+            "2582": "3.7",
+            "2583": "3.81",
+            "2585": "3.72",
+            "2705": "3.66",
+            "2905": "3.68",
+            "40": "3.78",
+            "50": "3.69",
+            "60": "3.63"
+        },
+        {
+            "product_id": "1",
+            "10": "3.73",
+            "1140": "5.61",
+            "1160": "4.71",
+            "1180": "1.12",
+            "1280": "3.51",
+            "1281": "3.32",
+            "1300": "3.67",
+            "1301": "1.86",
+            "1302": "2.99",
+            "1320": "3.01",
+            "1560": "2.44",
+            "1920": "3.8",
+            "1940": "1.8",
+            "2060": "4.0",
+            "2220": "1.58",
+            "2280": "4.18",
+            "2403": "7.22",
+            "2462": "2.65",
+            "2522": "10.68",
+            "2582": "2.85",
+            "2583": "8.72",
+            "2585": "3.77",
+            "2705": "2.87",
+            "2905": "2.93",
+            "40": "3.28",
+            "50": "1.47",
+            "60": "2.22"
+        },
+        {
+            "product_id": "4",
+            "10": "5.84",
+            "1140": "3.09",
+            "1160": "4.33",
+            "1180": "1.84",
+            "1280": "4.01",
+            "1281": "3.33",
+            "1300": "4.7",
+            "1301": "1.03",
+            "1302": "0.7",
+            "1320": "4.26",
+            "1560": "2.84",
+            "1920": "7.49",
+            "1940": "1.08",
+            "2060": "8.53",
+            "2220": "1.53",
+            "2280": "4.61",
+            "2403": "6.52",
+            "2462": "1.38",
+            "2522": "5.42",
+            "2582": "5.24",
+            "2583": "8.53",
+            "2585": "1.88",
+            "2705": "3.86",
+            "2905": "1.41",
+            "40": "2.53",
+            "50": "2.7",
+            "60": "1.33"
+        },
+        {
+            "product_id": "2",
+            "10": "",
+            "1140": "",
+            "1160": "",
+            "1180": "",
+            "1280": "",
+            "1281": "",
+            "1300": "",
+            "1301": "",
+            "1302": "",
+            "1320": "",
+            "1560": "",
+            "1920": "",
+            "1940": "",
+            "2060": "",
+            "2220": "",
+            "2280": "",
+            "2403": "",
+            "2462": "",
+            "2522": "",
+            "2582": "",
+            "2583": "",
+            "2585": "",
+            "2705": "",
+            "2905": "",
+            "40": "",
+            "50": "",
+            "60": ""
+        },
+        {
+            "product_id": "3",
+            "10": "",
+            "1140": "",
+            "1160": "",
+            "1180": "",
+            "1280": "",
+            "1281": "",
+            "1300": "",
+            "1301": "",
+            "1302": "",
+            "1320": "",
+            "1560": "",
+            "1920": "",
+            "1940": "",
+            "2060": "",
+            "2220": "",
+            "2280": "",
+            "2403": "",
+            "2462": "",
+            "2522": "",
+            "2582": "",
+            "2583": "",
+            "2585": "",
+            "2705": "",
+            "2905": "",
+            "40": "",
+            "50": "",
+            "60": ""
+        },
+        {
+            "product_id": "5",
+            "10": "",
+            "1140": "",
+            "1160": "",
+            "1180": "",
+            "1280": "",
+            "1281": "",
+            "1300": "",
+            "1301": "",
+            "1302": "",
+            "1320": "",
+            "1560": "",
+            "1920": "",
+            "1940": "",
+            "2060": "",
+            "2220": "",
+            "2280": "",
+            "2403": "",
+            "2462": "",
+            "2522": "",
+            "2582": "",
+            "2583": "",
+            "2585": "",
+            "2705": "",
+            "2905": "",
+            "40": "",
+            "50": "",
+            "60": ""
+        }
+    ]
+}
+```
+
+</details>
+
+<a id="datascience-q&a" />
 
 #### Questions et réponses (datascience)
 
