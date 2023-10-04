@@ -1,2 +1,3 @@
 A simple file to add commit to the repo and test the action.
 A second line for the same reason.
+Same
